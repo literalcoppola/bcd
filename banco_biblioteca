@@ -1,0 +1,126 @@
+--- CRIANDO DO ZERO
+
+DROP DATABASE IF EXISTS banco_biblioteca;
+CREATE DATABASE banco_biblioteca;
+
+-- use banco_biblioteca;
+
+CREATE TABLE IF NOT EXISTS categorias (
+    categoria_id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS departamento (
+    departamento_id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS livro (
+    livro_id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    autor VARCHAR(255) NOT NULL,
+    ISBN VARCHAR(13) NOT NULL UNIQUE,
+    categoria_id INT NOT NULL, 
+    editora VARCHAR(255) NOT NULL,
+    ano_publicacao INT NOT NULL,
+    quantidade INT NOT NULL, 
+    FOREIGN KEY (categoria_id) REFERENCES categorias(categoria_id)
+);
+
+CREATE TABLE IF NOT EXISTS estoque (
+    estoque_id INT AUTO_INCREMENT PRIMARY KEY,
+    livro_id INT NOT NULL,
+    quantidade INT NOT NULL, 
+    disponiveis INT NOT NULL,
+    FOREIGN KEY (livro_id) REFERENCES livro(livro_id)
+);
+
+CREATE TABLE IF NOT EXISTS usuario (
+    usuario_id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    registro VARCHAR(255) NOT NULL UNIQUE,
+    departamento_id INT NOT NULL,
+    FOREIGN KEY (departamento_id) REFERENCES departamento(departamento_id)
+);
+
+CREATE TABLE IF NOT EXISTS emprestimo (
+  emprestimo_id INT AUTO_INCREMENT PRIMARY KEY,
+  livro_id INT NOT NULL,
+  usuario_id INT NOT NULL,
+  retirada DATETIME NOT NULL,
+  devolucao DATETIME NOT NULL,
+  emprestimo_status ENUM('pendente', 'em_andamento', 'concluido', 'atrasado') NOT NULL,
+  FOREIGN KEY (livro_id) REFERENCES livro(livro_id),
+  FOREIGN KEY (usuario_id) REFERENCES usuario(usuario_id)
+);
+
+CREATE TABLE IF NOT EXISTS reserva (
+    reserva_id INT AUTO_INCREMENT PRIMARY KEY,
+    livro_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    reserva_data DATETIME NOT NULL,
+    retirada_prevista DATETIME,
+    reserva_status ENUM('pendente', 'atendido', 'cancelado') NOT NULL,
+    FOREIGN KEY (livro_id) REFERENCES livro(livro_id),
+    FOREIGN KEY (usuario_id) REFERENCES usuario(usuario_id)
+);
+
+CREATE TABLE IF NOT EXISTS relatorios (
+  relatorio_id INT AUTO_INCREMENT PRIMARY KEY,
+  tipo_relatorio ENUM('livros', 'emprestimos', 'usuarios') NOT NULL,
+  data_relatorio JSON NOT NULL
+);
+
+
+----- INSERINDO OS DADOS NAS TABELAS
+
+INSERT INTO categorias (nome) VALUES
+    ('Ficção'), ('Não Ficção'), ('Tecnologia'), ('História'), ('Ciências'), ('Biologia');
+
+INSERT INTO departamento (nome) VALUES
+    ('Ciências da Computação'), ('Engenharia Civil'), ('Administração'), ('ADS'), ('Ciências Biológicas');
+
+INSERT INTO livro (titulo, autor, ISBN, categoria_id, editora, ano_publicacao, quantidade) VALUES
+    ('O Senhor dos Anéis', 'J.R.R. Tolkien', '9780544026565', 1, 'HarperCollins', 1954, 10),
+    ('Uma Breve História do Tempo', 'Stephen Hawking', '9780553380163', 2, 'Bantam Books', 1988, 5),
+    ('Introdução à Programação em Python', 'John Zelle', '9781118290275', 3, 'Francis Lincoln', 2010, 8),
+    ('A Guerra dos Trinta Anos', 'Peter H. Wilson', '9780198735243', 4, 'Harvard University Press', 2010, 3),
+    ('A Origem das Espécies', 'Charles Darwin', '9780553588201', 5, 'Modern Library', 1859, 7),
+    ('A Teoria da Evolução', 'Richard Dawkins', '9780192803015', 5, 'Oxford University Press', 1983, 6);
+
+INSERT INTO estoque (livro_id, quantidade, disponiveis) VALUES
+    (1, 10, 10),
+    (2, 5, 5),
+    (3, 8, 8),
+    (4, 3, 3),
+    (5, 7, 7),
+    (6, 6, 6);
+
+INSERT INTO usuario (nome, email, registro, departamento_id) VALUES
+    ('João Silva', 'joao.silva@example.com', '12345', 1),
+    ('Maria Santos', 'maria.santos@example.com', '54321', 2),
+    ('Pedro Oliveira', 'pedro.oliveira@example.com', '98765', 3),
+    ('Ana Sousa', 'ana.sousa@example.com', '11111', 4),
+    ('Carlos Silva', 'carlos.silva@example.com', '22222', 5);
+
+INSERT INTO emprestimo (livro_id, usuario_id, retirada, devolucao, emprestimo_status) VALUES
+(1, 1, '2023-01-01 10:00:00', '2023-01-15 10:00:00', 'em_andamento'),
+(2, 2, '2023-02-01 15:00:00', '2023-02-15 15:00:00', 'concluido'),
+(3, 3, '2023-03-01 09:00:00', '2023-03-15 09:00:00', 'em_andamento'),
+(4, 4, '2023-04-01 11:00:00', '2023-04-15 11:00:00', 'pendente'),
+(5, 5, '2023-05-01 14:00:00', '2023-05-15 14:00:00', 'pendente');
+
+
+INSERT INTO reserva (livro_id, usuario_id, reserva_data, retirada_prevista, reserva_status) VALUES
+(1, 1, '2023-01-10 10:00:00', NULL, 'atendido'),
+(2, 2, '2023-02-10 15:00:00', NULL, 'atendido'),
+(3, 3, '2023-03-10 09:00:00', NULL, 'pendente'),
+(4, 4, '2023-04-10 11:00:00', NULL, 'pendente'),
+(5, 5, '2023-05-10 14:00:00', NULL, 'pendente');
+
+
+INSERT INTO relatorios (tipo_relatorio, data_relatorio) VALUES
+('livros', '{"total": 6, "disponiveis": 42, "emprestados": 18, "reservados": 6}'),
+('emprestimos', '{"total": 5, "pendentes": 2, "em_andamento": 2, "concluidos": 1}'),
+('usuarios', '{"total": 5, "alunos": 3, "professores": 1, "funcionarios": 1}');
